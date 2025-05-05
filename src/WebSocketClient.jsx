@@ -10,6 +10,7 @@ export default function WebSocketClient() {
 
   useEffect(() => {
     ws.current = new WebSocket("wss://socket-chat-iuwl.onrender.com");
+    ws.current.binaryType = "text";
 
     ws.current.onopen = () => {
       toast.success("WebSocket подключен");
