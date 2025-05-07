@@ -18,17 +18,24 @@ export default function WebSocketClient() {
       setIsDisabled(false);
     };
 
-    ws.current.onmessage = (event) => {
-      console.log("event", event);
+    ws.current.onmessage = async (event) => {
+      let messageText;
+
+      if (event.data instanceof Blob) {
+        messageText = await event.data.text();
+      } else {
+        messageText = event.data;
+      }
+
       try {
-        const data = JSON.parse(event.data);
+        const data = JSON.parse(messageText);
         if (data.type === "message") {
           setMessages((prev) => [...prev, `Recieved: ${data.text}`]);
           toast.info(`Message: ${data.text}`);
         }
       } catch (e) {
-        setMessages((prev) => [...prev, `Recieved: ${event.data}`]);
-        toast.info(`Message: ${event.data}`);
+        setMessages((prev) => [...prev, `Recieved: ${messageText}`]);
+        toast.info(`Message: ${messageText}`);
       }
     };
 
