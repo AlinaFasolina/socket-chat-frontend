@@ -30,11 +30,17 @@ export default function WebSocketClient() {
       try {
         const data = JSON.parse(messageText);
         if (data.type === "message") {
-          setMessages((prev) => [...prev, `Recieved: ${data.text}`]);
+          setMessages((prev) => [
+            ...prev,
+            { text: data.text, sender: "outer" },
+          ]);
           toast.info(`Message: ${data.text}`);
         }
       } catch (e) {
-        setMessages((prev) => [...prev, `Recieved: ${messageText}`]);
+        setMessages((prev) => [
+          ...prev,
+          { text: messageText, sender: "outer" },
+        ]);
         toast.info(`Message: ${messageText}`);
       }
     };
@@ -58,7 +64,7 @@ export default function WebSocketClient() {
     e.preventDefault();
     if (inputValue && ws.current.readyState === WebSocket.OPEN) {
       ws.current.send(JSON.stringify({ type: "message", text: inputValue }));
-      setMessages((prev) => [...prev, inputValue]);
+      setMessages((prev) => [...prev, { text: inputValue, sender: "me" }]);
       setInputValue("");
       toast("Message send");
     }
@@ -74,13 +80,13 @@ export default function WebSocketClient() {
         {messages.map((msg, idx) => (
           <div
             key={idx}
-            className={`mb-1 text-sm max-w-fit px-2 py-1 rounded bg-white ${
-              idx % 2 === 0
-                ? "ml-auto text-left bg-blue-100"
-                : "mr-auto text-right bg-green-100"
+            className={`mb-1 text-sm max-w-fit px-2 py-1 rounded ${
+              msg.sender === "me"
+                ? "ml-auto text-left bg-white"
+                : "mr-auto text-right bg-blue-100 "
             }`}
           >
-            {msg}
+            {msg.text}
           </div>
         ))}
       </div>
