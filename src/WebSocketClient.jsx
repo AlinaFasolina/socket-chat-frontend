@@ -66,7 +66,6 @@ export default function WebSocketClient() {
       ws.current.send(JSON.stringify({ type: "message", text: inputValue }));
       setMessages((prev) => [...prev, { text: inputValue, sender: "me" }]);
       setInputValue("");
-      toast("Message send");
     }
   };
 
