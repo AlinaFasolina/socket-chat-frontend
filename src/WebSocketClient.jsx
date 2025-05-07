@@ -11,7 +11,6 @@ export default function WebSocketClient() {
 
   useEffect(() => {
     ws.current = new WebSocket("wss://socket-chat-iuwl.onrender.com");
-    ws.current.binaryType = "text";
 
     ws.current.onopen = () => {
       setStatus("Connected");
@@ -20,6 +19,7 @@ export default function WebSocketClient() {
     };
 
     ws.current.onmessage = (event) => {
+      console.log("event", event);
       try {
         const data = JSON.parse(event.data);
         if (data.type === "message") {
