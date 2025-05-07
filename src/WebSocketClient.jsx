@@ -4,8 +4,9 @@ import "react-toastify/dist/ReactToastify.css";
 
 export default function WebSocketClient() {
   const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [typing, setTyping] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [status, setStatus] = useState("Connection...");
+  const [isDisabled, setIsDisabled] = useState(true);
   const ws = useRef(null);
 
   useEffect(() => {
@@ -13,32 +14,32 @@ export default function WebSocketClient() {
     ws.current.binaryType = "text";
 
     ws.current.onopen = () => {
-      toast.success("WebSocket подключен");
+      setStatus("Connected");
+      toast.success("WebSocket connected");
+      setIsDisabled(false);
     };
 
     ws.current.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "typing") {
-          setTyping(data.text);
-        } else if (data.type === "message") {
-          setMessages((prev) => [...prev, `Получено: ${data.text}`]);
-          toast.info(`Сообщение: ${data.text}`);
-          setTyping("");
+        if (data.type === "message") {
+          setMessages((prev) => [...prev, `Recieved: ${data.text}`]);
+          toast.info(`Message: ${data.text}`);
         }
       } catch (e) {
-        setMessages((prev) => [...prev, `Получено: ${event.data}`]);
-        toast.info(`Сообщение: ${event.data}`);
-        setTyping("");
+        setMessages((prev) => [...prev, `Recieved: ${event.data}`]);
+        toast.info(`Message: ${event.data}`);
       }
     };
 
     ws.current.onclose = () => {
-      console.error("WebSocket отключен");
+      setStatus("Disconnected");
+      console.error("WebSocket disconnected");
     };
 
     ws.current.onerror = (error) => {
-      console.error("Ошибка WebSocket:", error);
+      setStatus("Error");
+      console.error("Error WebSocket:", error);
     };
 
     return () => {
@@ -46,31 +47,22 @@ export default function WebSocketClient() {
     };
   }, []);
 
-  const sendMessage = () => {
-    if (input && ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ type: "message", text: input }));
-      setMessages((prev) => [...prev, `Отправлено: ${input}`]);
-      setInput("");
-      toast("Сообщение отправлено");
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (inputValue && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "message", text: inputValue }));
+      setMessages((prev) => [...prev, inputValue]);
+      setInputValue("");
+      toast("Message send");
     }
   };
 
-  const handleTyping = (e) => {
-    const value = e.target.value;
-    setInput(value);
-    if (ws.current.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ type: "typing", text: value }));
-    }
-  };
+  const handleInput = (e) => setInputValue(e.target.value);
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-2">WebSocket Чат</h1>
-      {typing && (
-        <div className="text-xs italic text-gray-500 mb-2">
-          Печатает: {typing}
-        </div>
-      )}
+      <h1 className="text-xl font-bold mb-2">WebSocket Chat</h1>
+      <p>Connection status: {status}</p>
       <div className="border rounded p-2 h-64 overflow-auto bg-gray-100">
         {messages.map((msg, idx) => (
           <div
@@ -85,21 +77,24 @@ export default function WebSocketClient() {
           </div>
         ))}
       </div>
-      <div className="mt-4 flex">
+      <form className="mt-4 flex" onSubmit={sendMessage}>
         <input
           type="text"
-          value={input}
-          onChange={handleTyping}
+          value={inputValue}
+          onChange={handleInput}
           className="flex-1 border rounded px-2 py-1 mr-2"
-          placeholder="Введите сообщение"
+          placeholder="Enter the message"
         />
         <button
-          onClick={sendMessage}
-          className="bg-blue-500 text-white px-4 py-1 rounded"
+          disabled={isDisabled}
+          type="submit"
+          className={`${
+            isDisabled ? "bg-gray-300" : "bg-blue-500"
+          }  text-white px-4 py-1 rounded`}
         >
-          Отправить
+          Send
         </button>
-      </div>
+      </form>
       <ToastContainer position="bottom-right" autoClose={3000} />
     </div>
   );
