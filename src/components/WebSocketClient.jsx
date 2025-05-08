@@ -80,15 +80,16 @@ export default function WebSocketClient() {
   };
 
   return (
-    <div className="p-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold mb-2">WebSocket Chat</h1>
-      {isDisabled && (
-        <div className="flex items-center mb-[20px]">
-          <span className="mr-[10px]">Connecting to WebSocket</span>
-          <Loader loading={isDisabled} />
-        </div>
-      )}
-
+    <div className="p-4 max-w-lg mx-auto">
+      <div className="flex flex-col items-center">
+        <h1 className="text-xl font-bold mb-2">WebSocket Chat</h1>
+        {isDisabled && (
+          <div className="flex items-center mb-[20px]">
+            <span className="mr-[10px]">Connecting to WebSocket</span>
+            <Loader loading={isDisabled} />
+          </div>
+        )}
+      </div>
       <div className="border rounded pt-2 pr-2 pl-2 pb-8 h-64 bg-gray-100 relative">
         <div className="overflow-auto h-full pr-[10px] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-[#0b08391a] [&::-webkit-scrollbar-thumb]:bg-[#a1a1a1] [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full">
           {messages.map((msg, idx) => (
@@ -112,12 +113,12 @@ export default function WebSocketClient() {
         )}
       </div>
 
-      <form className="mt-4 flex" onSubmit={sendMessage}>
+      <form className="mt-4 flex flex-col sm:flex-row" onSubmit={sendMessage}>
         <input
           type="text"
           value={inputValue}
           onChange={handleInput}
-          className="flex-1 border rounded px-2 py-1 mr-2 outline-none"
+          className="flex-1 border rounded px-2 py-1 mb-[10px] sm:mb-[0] sm:mr-2 outline-none"
           placeholder="Enter the message"
         />
         <button
