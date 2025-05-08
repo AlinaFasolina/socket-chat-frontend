@@ -6,7 +6,6 @@ import Loader from "./Loader";
 export default function WebSocketClient() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
-  const [status, setStatus] = useState("Connection...");
   const [isDisabled, setIsDisabled] = useState(true);
   const [isSomeoneTyping, setIsSomeoneTyping] = useState(false);
   const typingTimeoutRef = useRef(null);
@@ -16,7 +15,6 @@ export default function WebSocketClient() {
     ws.current = new WebSocket("wss://socket-chat-iuwl.onrender.com");
 
     ws.current.onopen = () => {
-      setStatus("Connected");
       toast.success("WebSocket connected");
       setIsDisabled(false);
     };
@@ -37,7 +35,6 @@ export default function WebSocketClient() {
             ...prev,
             { text: data.text, sender: "outer" },
           ]);
-          toast.info(`Message: ${data.text}`);
         } else if (data.type === "typing") {
           setIsSomeoneTyping(true);
           if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -50,17 +47,14 @@ export default function WebSocketClient() {
           ...prev,
           { text: messageText, sender: "outer" },
         ]);
-        toast.info(`Message: ${messageText}`);
       }
     };
 
     ws.current.onclose = () => {
-      setStatus("Disconnected");
       console.error("WebSocket disconnected");
     };
 
     ws.current.onerror = (error) => {
-      setStatus("Error");
       console.error("Error WebSocket:", error);
     };
 
@@ -90,34 +84,40 @@ export default function WebSocketClient() {
       <h1 className="text-xl font-bold mb-2">WebSocket Chat</h1>
       {isDisabled && (
         <div className="flex items-center mb-[20px]">
-          <span className="mr-[10px]">Connecting to Web Socket</span>
+          <span className="mr-[10px]">Connecting to WebSocket</span>
           <Loader loading={isDisabled} />
         </div>
       )}
 
-      {isSomeoneTyping && (
-        <p className="text-sm italic text-gray-500">Someone is typing...</p>
-      )}
-      <div className="border rounded p-2 h-64 overflow-auto bg-gray-100">
-        {messages.map((msg, idx) => (
-          <div
-            key={idx}
-            className={`mb-1 text-sm max-w-fit px-2 py-1 rounded ${
-              msg.sender === "me"
-                ? "ml-auto text-left bg-white"
-                : "mr-auto text-right bg-blue-100 "
-            }`}
-          >
-            {msg.text}
-          </div>
-        ))}
+      <div className="border rounded pt-2 pr-2 pl-2 pb-8 h-64 bg-gray-100 relative">
+        <div className="overflow-auto h-full pr-[10px] [&::-webkit-scrollbar]:w-[5px] [&::-webkit-scrollbar-track]:bg-[#0b08391a] [&::-webkit-scrollbar-thumb]:bg-[#a1a1a1] [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-thumb]:rounded-full">
+          {messages.map((msg, idx) => (
+            <div
+              key={idx}
+              className={`mb-1 text-sm max-w-fit px-2 py-1 rounded ${
+                msg.sender === "me"
+                  ? "ml-auto text-left bg-white"
+                  : "mr-auto text-right bg-blue-100 "
+              }`}
+            >
+              {msg.text}
+            </div>
+          ))}
+        </div>
+
+        {isSomeoneTyping && (
+          <p className="absolute bottom-[3px] r-0 text-sm italic text-gray-500">
+            Typing...
+          </p>
+        )}
       </div>
+
       <form className="mt-4 flex" onSubmit={sendMessage}>
         <input
           type="text"
           value={inputValue}
           onChange={handleInput}
-          className="flex-1 border rounded px-2 py-1 mr-2"
+          className="flex-1 border rounded px-2 py-1 mr-2 outline-none"
           placeholder="Enter the message"
         />
         <button
