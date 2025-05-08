@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Loader from "./Loader";
 
 export default function WebSocketClient() {
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState("");
   const [status, setStatus] = useState("Connection...");
   const [isDisabled, setIsDisabled] = useState(true);
+  const [isSomeoneTyping, setIsSomeoneTyping] = useState(false);
+  const typingTimeoutRef = useRef(null);
   const ws = useRef(null);
 
   useEffect(() => {
@@ -35,6 +38,12 @@ export default function WebSocketClient() {
             { text: data.text, sender: "outer" },
           ]);
           toast.info(`Message: ${data.text}`);
+        } else if (data.type === "typing") {
+          setIsSomeoneTyping(true);
+          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+          typingTimeoutRef.current = setTimeout(() => {
+            setIsSomeoneTyping(false);
+          }, 2000);
         }
       } catch (e) {
         setMessages((prev) => [
@@ -69,12 +78,26 @@ export default function WebSocketClient() {
     }
   };
 
-  const handleInput = (e) => setInputValue(e.target.value);
+  const handleInput = (e) => {
+    setInputValue(e.target.value);
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: "typing" }));
+    }
+  };
 
   return (
     <div className="p-4 max-w-md mx-auto">
       <h1 className="text-xl font-bold mb-2">WebSocket Chat</h1>
-      <p>Connection status: {status}</p>
+      {isDisabled && (
+        <div className="flex items-center mb-[20px]">
+          <span className="mr-[10px]">Connecting to Web Socket</span>
+          <Loader loading={isDisabled} />
+        </div>
+      )}
+
+      {isSomeoneTyping && (
+        <p className="text-sm italic text-gray-500">Someone is typing...</p>
+      )}
       <div className="border rounded p-2 h-64 overflow-auto bg-gray-100">
         {messages.map((msg, idx) => (
           <div
